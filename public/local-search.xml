@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>阿里云ECS从零搭建记录</title>
+    <link href="/2026/06/27/%E9%98%BF%E9%87%8C%E4%BA%91ECS%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E8%AE%B0%E5%BD%95/"/>
+    <url>/2026/06/27/%E9%98%BF%E9%87%8C%E4%BA%91ECS%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E8%AE%B0%E5%BD%95/</url>
+    
+    <content type="html"><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>作为一名准大四学生，暑假开始系统学习运维。第一步是在云上搞一台属于自己的 Linux 服务器。</p><p>我选择了阿里云的学生优惠——**”学生专属算力包”**，有 850 元额度，对学习来说完全够用。</p><h2 id="选型过程"><a href="#选型过程" class="headerlink" title="选型过程"></a>选型过程</h2><h3 id="学生认证"><a href="#学生认证" class="headerlink" title="学生认证"></a>学生认证</h3><p>之前阿里云学生认证过期了，重新验证了下，很快通过。</p><h3 id="选哪个实例"><a href="#选哪个实例" class="headerlink" title="选哪个实例"></a>选哪个实例</h3><p>学生计划里有几个选项：</p><ul><li>e实例 2核2G</li><li>轻量应用服务器 2核2G</li><li>c7实例 2核4G</li></ul><p>最终选了 <strong>e实例 2核2G</strong>，因为：</p><ol><li>学生优惠覆盖，基本免费</li><li>学习用足够了，后面不够再升配</li></ol><h3 id="选配置"><a href="#选配置" class="headerlink" title="选配置"></a>选配置</h3><p>可选规格中选了 ecs.e 系列，可用区选的是<strong>华东1（杭州）</strong>，地域离得近延迟低。</p><p><strong>注意</strong>：系统盘默认 40G ESSD Entry，不支持变更，够用就行。</p><h2 id="网络配置（踩坑）"><a href="#网络配置（踩坑）" class="headerlink" title="网络配置（踩坑）"></a>网络配置（踩坑）</h2><h3 id="专有网络-vs-公网IP"><a href="#专有网络-vs-公网IP" class="headerlink" title="专有网络 vs 公网IP"></a>专有网络 vs 公网IP</h3><p>购买页面默认只有专有网络和虚拟交换机选项，<strong>没有公网IP</strong>。一开始以为漏掉了什么配置。</p><p>解决方案：先买实例，之后<strong>单独创建弹性公网 IP（EIP）</strong>再绑定。</p><h3 id="EIP-创建"><a href="#EIP-创建" class="headerlink" title="EIP 创建"></a>EIP 创建</h3><p>创建弹性 IP 时几个关键选项：</p><ul><li><strong>防护类型</strong>：默认</li><li><strong>地址池</strong>：默认</li><li><strong>流量计费</strong>：按使用流量（省钱）</li></ul><h3 id="带宽选择"><a href="#带宽选择" class="headerlink" title="带宽选择"></a>带宽选择</h3><p>带宽选 3Mbps 后发现无法使用学生优惠券——改成<strong>按使用流量计费</strong>就好了，平时学习测试流量不大。</p><h2 id="SSH-连接踩坑"><a href="#SSH-连接踩坑" class="headerlink" title="SSH 连接踩坑"></a>SSH 连接踩坑</h2><h3 id="Windows-上-SSH"><a href="#Windows-上-SSH" class="headerlink" title="Windows 上 SSH"></a>Windows 上 SSH</h3><p>Windows 上用 <strong>Git Bash</strong> 自带的 ssh 命令，不需要额外装。</p><h3 id="PEM-密钥"><a href="#PEM-密钥" class="headerlink" title="PEM 密钥"></a>PEM 密钥</h3><p>阿里云生成密钥的时候下载了一个 <code>.pem</code> 文件。连接命令：</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">ssh -i ~/.ssh/bing-key.pem root@47.99.166.175<br></code></pre></td></tr></table></figure><p><strong>第一个坑</strong>：路径写错了，<code>C:Users</code> 没有斜杠，应该用 <code>/c/Users/...</code> 这种 Unix 路径格式。</p><p><strong>第二个坑</strong>：密钥权限太开放，需要在 Git Bash 里执行：</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">chmod</span> 400 ~/.ssh/bing-key.pem<br></code></pre></td></tr></table></figure><p>连上之后看到了熟悉的 Linux 欢迎界面，那一刻还是很开心的 😄</p><h2 id="安全加固"><a href="#安全加固" class="headerlink" title="安全加固"></a>安全加固</h2><ol><li>创建普通用户 <code>bing</code>，日常工作不用 root</li><li>禁止 root SSH 登录：</li></ol><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sed -i <span class="hljs-string">&#x27;s/^#PermitRootLogin yes/PermitRootLogin no/&#x27;</span> /etc/ssh/sshd_config<br></code></pre></td></tr></table></figure><p><strong>关于 <code>^#</code> 的含义</strong>：<code>^#</code> 是正则表达式，表示行首的注释符 <code>#</code>。整句意思：找到被注释掉的 <code>PermitRootLogin yes</code>，改为 <code>PermitRootLogin no</code>。</p><h2 id="Docker-安装踩坑"><a href="#Docker-安装踩坑" class="headerlink" title="Docker 安装踩坑"></a>Docker 安装踩坑</h2><h3 id="第一个坑：官方源被墙"><a href="#第一个坑：官方源被墙" class="headerlink" title="第一个坑：官方源被墙"></a>第一个坑：官方源被墙</h3><p>添加 Docker 官方源时报错：</p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs routeros">Curl <span class="hljs-built_in">error</span> (56): Failure when receiving data <span class="hljs-keyword">from</span> the<span class="hljs-built_in"> peer</span><br><span class="hljs-built_in"></span>OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 104<br></code></pre></td></tr></table></figure><p>这是国内访问 Docker 官方源被墙的经典问题。</p><p><strong>解决</strong>：换阿里云 Docker 镜像源，秒装成功。</p><h3 id="第二个坑：Docker-Hub-拉镜像超时"><a href="#第二个坑：Docker-Hub-拉镜像超时" class="headerlink" title="第二个坑：Docker Hub 拉镜像超时"></a>第二个坑：Docker Hub 拉镜像超时</h3><figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs subunit">docker run hello-world<br><span class="hljs-keyword">Error </span>response from daemon: <br>  Get &quot;https://registry<span class="hljs-string">-1</span>.docker.io/v2/&quot;: <br>  net/http: request canceled while waiting for connection<br></code></pre></td></tr></table></figure><p><strong>解决</strong>：配置 Docker 镜像加速器（阿里云容器镜像服务提供免费的加速地址）：</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">mkdir</span> -p /etc/docker<br><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">tee</span> /etc/docker/daemon.json &lt;&lt;-<span class="hljs-string">&#x27;EOF&#x27;</span><br>&#123;<br>  <span class="hljs-string">&quot;registry-mirrors&quot;</span>: [<span class="hljs-string">&quot;https://&lt;你的阿里云加速地址&gt;.mirror.aliyuncs.com&quot;</span>]<br>&#125;<br>EOF<br><span class="hljs-built_in">sudo</span> systemctl daemon-reload<br><span class="hljs-built_in">sudo</span> systemctl restart docker<br></code></pre></td></tr></table></figure><p>配好后 <code>docker run hello-world</code> 终于跑起来了 🎉</p><h2 id="下一步计划"><a href="#下一步计划" class="headerlink" title="下一步计划"></a>下一步计划</h2><ul><li><input disabled="" type="checkbox"> Nginx 安装配置</li><li><input disabled="" type="checkbox"> Docker Compose </li><li><input disabled="" type="checkbox"> 把博客部署到这台服务器上</li><li><input disabled="" type="checkbox"> 监控告警</li><li><input disabled="" type="checkbox"> CI&#x2F;CD</li></ul><hr><blockquote><p>把踩过的坑记录下来，下次再遇到就不慌了。这就是运维的日常。</p></blockquote>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>阿里云</tag>
+      
+      <tag>ECS</tag>
+      
+      <tag>运维</tag>
+      
+      <tag>Linux</tag>
+      
+      <tag>云计算</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="/2026/06/27/hello-world/"/>
+    <url>/2026/06/27/hello-world/</url>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  
+</search>
