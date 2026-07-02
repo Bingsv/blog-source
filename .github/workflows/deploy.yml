@@ -14,7 +14,7 @@ jobs:
       - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 安装依赖
         run: npm ci
@@ -22,20 +22,13 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
-      - name: 上传到 ECS
-        uses: easingthemes/ssh-deploy@v4.1.10
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          ARGS: "-avz"
-          SOURCE: "public/"
-          REMOTE_HOST: ${{ secrets.ECS_HOST }}
-          REMOTE_USER: ${{ secrets.ECS_USER }}
-          TARGET: "/home/bing/blog-static"
-
-      - name: 重启 Nginx
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.ECS_HOST }}
-          username: ${{ secrets.ECS_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: cd ~/blog-compose && docker compose restart nginx
+      - name: 上传到 ECS 并重启 Nginx
+        env:
+          KEY: ${{ secrets.SSH_KEY }}
+          HOST: ${{ secrets.ECS_HOST }}
+          USER: ${{ secrets.ECS_USER }}
+        run: |
+          echo "$KEY" > deploy_key
+          chmod 600 deploy_key
+          scp -o StrictHostKeyChecking=no -i deploy_key -r public/* ${USER}@${HOST}:~/blog-static/
+          ssh -o StrictHostKeyChecking=no -i deploy_key ${USER}@${HOST} "cd ~/blog-compose && docker compose restart nginx"
