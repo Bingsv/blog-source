@@ -1,0 +1,41 @@
+name: 自动部署博客到 ECS
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 Hexo
+        run: npm install
+
+      - name: 生成静态文件
+        run: npx hexo generate
+
+      - name: 部署到 ECS
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-avz --delete"
+          SOURCE: "public/"
+          REMOTE_HOST: ${{ secrets.ECS_HOST }}
+          REMOTE_USER: ${{ secrets.ECS_USER }}
+          TARGET: "/home/bing/blog-static"
+
+      - name: 重启 Nginx
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd ~/blog-compose && docker compose restart nginx
