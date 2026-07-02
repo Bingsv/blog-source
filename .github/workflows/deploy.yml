@@ -16,14 +16,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 安装 Hexo
-        run: npm install
-
-      - name: 安装 Hexo CLI
-        run: npm install -g hexo-cli
+      - name: 安装依赖
+        run: npm ci
 
       - name: 生成静态文件
-        run: hexo generate
+        run: npx hexo generate
 
       - name: 配置 SSH
         run: |
