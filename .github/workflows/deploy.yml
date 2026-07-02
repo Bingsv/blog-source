@@ -22,13 +22,10 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
-      - name: 上传到 ECS 并重启 Nginx
-        env:
-          KEY: ${{ secrets.SSH_KEY }}
-          HOST: ${{ secrets.ECS_HOST }}
-          USER: ${{ secrets.ECS_USER }}
+      - name: 部署到 ECS
         run: |
-          echo "$KEY" > deploy_key
-          chmod 600 deploy_key
-          scp -o StrictHostKeyChecking=no -i deploy_key -r public/* ${USER}@${HOST}:~/blog-static/
-          ssh -o StrictHostKeyChecking=no -i deploy_key ${USER}@${HOST} "cd ~/blog-compose && docker compose restart nginx"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -r public/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:~/blog-static/
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "cd ~/blog-compose && docker compose restart nginx"
