@@ -19,8 +19,11 @@ jobs:
       - name: 安装 Hexo
         run: npm install
 
+      - name: 安装 Hexo CLI
+        run: npm install -g hexo-cli
+
       - name: 生成静态文件
-        run: npm run build
+        run: hexo generate
 
       - name: 配置 SSH
         run: |
