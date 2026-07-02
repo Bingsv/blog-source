@@ -20,7 +20,7 @@ jobs:
         run: npm install
 
       - name: 生成静态文件
-        run: npx hexo generate
+        run: npm run build
 
       - name: 配置 SSH
         run: |
