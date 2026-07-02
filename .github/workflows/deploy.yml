@@ -22,19 +22,20 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
-      - name: 配置 SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "Host ecs
-            HostName ${{ secrets.ECS_HOST }}
-            User ${{ secrets.ECS_USER }}
-            IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no" > ~/.ssh/config
-
       - name: 上传到 ECS
-        run: scp -r public/* ecs:~/blog-static/
+        uses: easingthemes/ssh-deploy@v4.1.10
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-avz"
+          SOURCE: "public/"
+          REMOTE_HOST: ${{ secrets.ECS_HOST }}
+          REMOTE_USER: ${{ secrets.ECS_USER }}
+          TARGET: "/home/bing/blog-static"
 
       - name: 重启 Nginx
-        run: ssh ecs "cd ~/blog-compose && docker compose restart nginx"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd ~/blog-compose && docker compose restart nginx
