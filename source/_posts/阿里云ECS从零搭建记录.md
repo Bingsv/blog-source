@@ -1,6 +1,7 @@
 ---
 title: 阿里云ECS从零搭建记录
 date: 2026-06-27 01:06:13
+categories: [运维]
 tags: [阿里云, ECS, 运维, Linux, 云计算]
 ---
 

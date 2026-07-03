@@ -1,6 +1,7 @@
 ---
 title: Shell脚本从零到自动化部署
 date: 2026-07-01 15:41:11
+categories: [运维]
 tags: [Shell, 运维, 自动化, Linux, Bash]
 ---
 

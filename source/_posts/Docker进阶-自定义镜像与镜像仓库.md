@@ -1,6 +1,7 @@
 ---
 title: Docker进阶-自定义镜像与镜像仓库
 date: 2026-07-03 15:33:25
+categories: [运维]
 tags: [Docker, Dockerfile, 镜像仓库, 阿里云, 容器]
 ---
 
