@@ -1,4 +1,4 @@
-name: 自动部署博客到 ECS
+name: 自动部署博客
 
 on:
   push:
@@ -29,3 +29,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -r public/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:~/blog-static/
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "cd ~/blog-compose && docker compose restart nginx"
+
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.GH_PAT }}
+          external_repository: Bingsv/Bingsv.github.io
+          publish_branch: main
+          publish_dir: ./public
+          cname: bi-ng.top
