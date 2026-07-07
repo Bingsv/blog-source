@@ -22,6 +22,9 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
+      - name: 替换自定义首页
+        run: cp source/custom-index.html public/index.html 2>/dev/null || true
+
       - name: 部署到 ECS
         run: |
           mkdir -p ~/.ssh
