@@ -64,11 +64,11 @@
         <div class="avatar">🖥</div>
         <h1>Bing's Lab</h1>
         <p class="tagline">运维工程实习生 | 准大四 | 持续学习中</p>
-        <p class="status">bi-ng.top · 10 篇运维文章</p>
+        <p class="status">bi-ng.top · <span id="post-count">加载中...</span></p>
     </div>
     <div class="links">
-        <a href="/archives/"><span class="icon">📝</span>技术博客<br><small style="color:#6e7681">10 篇运维文章</small></a>
-        <a href="https://github.com/Bingsv/ops-portfolio"><span class="icon">💻</span>运维作品集<br><small style="color:#6e7681">Docker · Shell · Python</small></a>
+        <a href="/archives/"><span class="icon">📝</span>技术博客<br><small style="color:#6e7681"><span id="post-count-2">加载中...</span></small></a>
+        <a href="https://github.com/Bingsv/ops-portfolio"><span class="icon">💻</span>运维作品集<br><small style="color:#6e7681">Docker · K8s · 监控</small></a>
         <a href="https://github.com/Bingsv/blog-source"><span class="icon">🔧</span>博客源码<br><small style="color:#6e7681">CI/CD 自动部署</small></a>
         <a href="/about/"><span class="icon">👤</span>关于我<br><small style="color:#6e7681">联系方式</small></a>
     </div>
@@ -78,26 +78,55 @@
             <span class="skill">Linux</span><span class="skill">Docker</span><span class="skill">Nginx</span>
             <span class="skill">Shell</span><span class="skill">Python</span><span class="skill">CI/CD</span>
             <span class="skill">阿里云</span><span class="skill">MySQL</span><span class="skill">Git</span>
-            <span class="skill">HTTPS/SSL</span>
-            <span class="skill">Prometheus</span><span class="skill">Grafana</span>
+            <span class="skill">HTTPS/SSL</span><span class="skill">Prometheus</span><span class="skill">Grafana</span>
             <span class="skill">Kubernetes</span><span class="skill">k3s</span>
         </div>
     </div>
     <div class="section">
-    <div class="section">
         <h2>最新文章</h2>
-        <div class="post-item"><a href="/2026/07/21/Kubernetes%E5%85%A5%E9%97%A8-k3s%E4%BB%8E%E5%AE%89%E8%A3%85%E5%88%B0%E9%83%A8%E7%BD%B2Flask/">Kubernetes入门—k3s从安装到部署Flask</a><span class="post-date">07/21</span></div>
-        <div class="post-item"><a href="/2026/07/18/Prometheus%2BGrafana%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA/">Prometheus+Grafana监控体系从零搭建</a><span class="post-date">07/18</span></div>
-        <div class="post-item"><a href="/2026/07/09/Flask%E4%BB%8E%E9%9B%B6%E5%88%B0Docker%E5%8C%96%E9%83%A8%E7%BD%B2/">Flask从零到Docker化部署</a><span class="post-date">07/09</span></div>
-        <div class="post-more"><a href="/archives/">查看全部 10 篇 →</a></div>
-    </div>
+        <div id="post-list">
+            <div class="post-item"><span style="color:#6e7681">加载中...</span></div>
+        </div>
+        <div class="post-more"><a href="/archives/">查看全部 →</a></div>
     </div>
     <div class="section">
         <h2>项目</h2>
-        <div class="post-item"><a href="https://github.com/Bingsv/ops-portfolio">运维配置归档</a><span class="post-date">Docker · Nginx · Shell</span></div>
+        <div class="post-item"><a href="https://github.com/Bingsv/ops-portfolio">运维配置归档</a><span class="post-date">Docker · K8s · 监控</span></div>
         <div class="post-item"><a href="https://github.com/Bingsv/blog-source">博客源码 + CI/CD</a><span class="post-date">GitHub Actions · Hexo</span></div>
     </div>
     <div class="footer"><span>bi-ng.top</span><span>·</span><span>GitHub Pages</span><span>·</span><span>Hexo + Fluid</span></div>
 </div>
+
+<script>
+// 自动从 local-search.xml 加载最新文章，无需手动维护
+fetch('/local-search.xml')
+  .then(r => r.text())
+  .then(xml => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xml, 'text/xml');
+    const entries = [...doc.querySelectorAll('entry')];
+
+    // 更新文章总数
+    const count = entries.length;
+    document.getElementById('post-count').textContent = count + ' 篇运维文章';
+    document.getElementById('post-count-2').textContent = count + ' 篇运维文章';
+
+    // 取最近 5 篇，按日期倒序
+    const latest = entries.slice(0).reverse().slice(0, 5);
+
+    const list = document.getElementById('post-list');
+    list.innerHTML = latest.map(e => {
+      const title = e.querySelector('title').textContent;
+      const url = e.querySelector('url').textContent;
+      // 从 URL 提取日期: /2026/07/21/...
+      const dateMatch = url.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+      const date = dateMatch ? dateMatch[2] + '/' + dateMatch[3] : '';
+      return '<div class="post-item"><a href="' + url + '">' + title + '</a><span class="post-date">' + date + '</span></div>';
+    }).join('');
+  })
+  .catch(() => {
+    document.getElementById('post-list').innerHTML = '<div class="post-item"><a href="/archives/">查看所有文章 →</a></div>';
+  });
+</script>
 </body>
 </html>
