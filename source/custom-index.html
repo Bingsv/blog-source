@@ -158,7 +158,7 @@ fetch('/local-search.xml')
     var cnt = allPosts.length;
     document.getElementById('post-count').textContent = cnt + ' 篇运维文章';
     document.getElementById('post-count-2').textContent = cnt + ' 篇运维文章';
-    renderPosts(allPosts.slice().reverse().slice(0, 5));
+    renderPosts(allPosts.slice(0, 5));
   })
   .catch(function() {
     document.getElementById('post-list').innerHTML = '<div class="post-item"><a href="/archives/">查看所有文章 →</a></div>';
