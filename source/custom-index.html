@@ -92,6 +92,7 @@
             .header { padding: 30px 0 20px; }
             .intro { font-size: 12px; }
         }
+        .hide-on-public { display: none; }
     </style>
 </head>
 <body>
@@ -101,7 +102,7 @@
         <h1>Bing's Lab</h1>
         <p class="tagline">运维工程实习生 | 准大四 | 持续学习中</p>
         <p class="status">bi-ng.top · <span id="post-count">加载中...</span></p>
-        <div class="intro">
+        <div class="intro hide-on-public" id="intro-section">
             准大四学生，正在找<strong>运维实习生</strong>岗位。暑假从零开始，在阿里云 ECS 上独立搭建了整套运维体系——<strong>Docker 容器化、Nginx 反向代理、CI/CD 自动部署、Prometheus + Grafana 监控</strong>，最近在学 <strong>Kubernetes</strong>。踩过的坑都记录在博客和 GitHub 里。
         </div>
         <div class="search-wrap">
@@ -187,6 +188,12 @@ inp.addEventListener('input', function() {
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.search-wrap')) res.style.display = 'none';
 });
+
+// 域名适配：bi-ng.top 隐藏自我介绍
+if (window.location.hostname === "bi-ng.top") {
+  var introEl = document.getElementById("intro-section");
+  if (introEl) introEl.style.display = "none";
+}
 </script>
 </body>
 </html>

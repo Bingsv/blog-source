@@ -22,7 +22,18 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
-      - name: 部署到 GitHub Pages（原生 Hexo 首页）
+      - name: 替换为自定义导航首页
+        run: cp source/custom-index.html public/index.html
+
+      - name: 部署到 ECS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -r public/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:~/blog-static/
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "cd ~/blog-compose && docker compose restart nginx"
+
+      - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GH_PAT }}
@@ -30,12 +41,3 @@ jobs:
           publish_branch: main
           publish_dir: ./public
           cname: bi-ng.top
-
-      - name: 部署到 ECS（自定义导航首页）
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          cp source/custom-index.html public/index.html
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -r public/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:~/blog-static/
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "cd ~/blog-compose && docker compose restart nginx"
