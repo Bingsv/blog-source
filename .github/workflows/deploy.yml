@@ -22,14 +22,13 @@ jobs:
       - name: 生成静态文件
         run: npx hexo generate
 
-      - name: 替换自定义首页
-        run: cp source/custom-index.html public/index.html 2>/dev/null || true
 
       - name: 部署到 ECS
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          cp source/custom-index.html public/index.html
           scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -r public/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:~/blog-static/
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "cd ~/blog-compose && docker compose restart nginx"
 
